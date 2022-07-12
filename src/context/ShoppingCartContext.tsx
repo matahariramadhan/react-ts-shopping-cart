@@ -5,6 +5,10 @@ type ShoppingCartProps = {
 };
 
 type ShoppingCartContext = {
+  openCart: () => void;
+  closeCart: () => void;
+  cartQuantity: number;
+  cartItems: CartItem[];
   getItemQuantity: (id: number) => number;
   increaseQuantity: (id: number) => void;
   decreaseQuantity: (id: number) => void;
@@ -23,14 +27,26 @@ export function useShoppingCart() {
 }
 
 export function ShoppingCartProvider({ children }: ShoppingCartProps) {
-  const [cartItem, setCartItem] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
-  function getItemQuantity(id: number) {
-    return cartItem.find((item) => item.id === id)?.quantity || 0;
+  const cartQuantity = cartItems.reduce(
+    (quantity, item) => quantity + item.quantity,
+    0
+  );
+
+  function openCart() {
+    setIsOpen(true);
+  }
+  function closeCart() {
+    setIsOpen(false);
   }
 
+  function getItemQuantity(id: number) {
+    return cartItems.find((item) => item.id === id)?.quantity || 0;
+  }
   function increaseQuantity(id: number) {
-    setCartItem((currItems) => {
+    setCartItems((currItems) => {
       if (currItems.find((item) => item.id === id) == null) {
         return [...currItems, { id, quantity: 1 }];
       } else {
@@ -44,9 +60,8 @@ export function ShoppingCartProvider({ children }: ShoppingCartProps) {
       }
     });
   }
-
   function decreaseQuantity(id: number) {
-    setCartItem((currItems) => {
+    setCartItems((currItems) => {
       if (currItems.find((item) => item.id === id) == null) {
         return currItems.filter((item) => item.id !== id);
       } else {
@@ -60,14 +75,22 @@ export function ShoppingCartProvider({ children }: ShoppingCartProps) {
       }
     });
   }
-
-  function removeFromCart(id: number){
-    setCartItem(currItems => currItems.filter(item => item.id !== id))
+  function removeFromCart(id: number) {
+    setCartItems((currItems) => currItems.filter((item) => item.id !== id));
   }
 
   return (
     <ShoppingCartContext.Provider
-      value={{ getItemQuantity, increaseQuantity, decreaseQuantity, removeFromCart }}
+      value={{
+        openCart,
+        closeCart,
+        cartItems,
+        cartQuantity,
+        getItemQuantity,
+        increaseQuantity,
+        decreaseQuantity,
+        removeFromCart,
+      }}
     >
       {children}
     </ShoppingCartContext.Provider>
